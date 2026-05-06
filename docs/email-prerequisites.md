@@ -28,7 +28,22 @@ We'll use Postman to interact with the API during exercises.
 - Download: https://www.postman.com/downloads/
 - Create a free account if you don't have one (needed to import collections)
 
-### 3. Pull the API image ahead of time (saves time during the session)
+### 3. A code editor (required)
+You'll read and edit Java source files during Exercise 2 — pick whichever you're comfortable with.
+
+- **IntelliJ IDEA Community (recommended, free):** https://www.jetbrains.com/idea/download
+- **VS Code (also works fine):** https://code.visualstudio.com
+
+### 4. Git (required)
+Needed to clone the course repository.
+
+- Download: https://git-scm.com/downloads
+- Verify it's working:
+  ```bash
+  git --version
+  ```
+
+### 5. Pull the API image ahead of time (saves time during the session)
 ```bash
 # Clone the course repo
 git clone https://github.com/codeclubcph/api-security-techniques.git
@@ -45,19 +60,37 @@ docker compose up --build
 docker compose down
 ```
 
-### 4. Import the Postman collection
+### 6. Import the Postman collection
 1. Open Postman
 2. Click **Import** (top left)
 3. Drag and drop the file: `postman/api-security-course.postman_collection.json`
 4. The collection **"API Security Techniques – Wallet API"** will appear in your sidebar
 
-### 5. Quick smoke test
+### 7. Quick smoke test
 With the API running (`docker compose up`):
 1. In Postman, open **"1 – Authentication" → "Login as Alice"**
 2. Hit **Send**
 3. You should get a `200 OK` with a `token` in the response body
 
 If that works — you're ready! ✅
+
+---
+
+## Useful Docker commands (for reference during the workshop)
+
+```bash
+docker compose up --build   # Build and start the app
+docker compose up           # Start without rebuilding
+docker compose down         # Stop and remove containers
+docker compose logs -f      # Follow live logs
+docker compose restart      # Restart after code changes
+```
+
+---
+
+## Trouble with setup?
+
+The most common issue is Docker Desktop not being started — make sure the whale icon is visible in your taskbar/menu bar before running `docker compose up`.
 
 ---
 
@@ -84,17 +117,6 @@ The workshop is structured as two theory blocks and two hands-on exercises:
 - You don't need to know Java — all code snippets are explained
 
 ---
-
-## Nice to have (but not required)
-
-- A Java IDE (IntelliJ IDEA / VS Code with Java extension) — if you'd like to edit the API source during Exercise 2
-- Basic understanding of JWT tokens
-
----
-
-## Questions?
-
-Reply to this email or reach me at magdalena@tbsi.it.
 
 See you Thursday!
 

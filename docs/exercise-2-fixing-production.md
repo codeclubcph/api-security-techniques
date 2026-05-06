@@ -18,27 +18,29 @@
 
 ---
 
-## Fix 1 — Add Ownership Checks (IDOR) (15 min)
+## Fix 1 — Add Ownership Checks (IDOR) (25 min)
 
-**File:** `api/src/main/java/com/example/wallet/service/AccountService.java`
+Apply the same pattern to **3 services and 3 controllers**.
 
-### The bug:
+---
+
+### 1a — AccountService + AccountController
+
+**File:** `src/main/java/com/example/wallet/service/AccountService.java`
+
 ```java
+// The bug:
 public Account getAccountById(Long id) {
     return accountRepository.findById(id)   // ← no ownership check
         .orElseThrow(() -> new RuntimeException("Account not found"));
 }
-```
 
-### The fix — add a `callerUsername` parameter:
-```java
+// The fix:
 public Account getAccountById(Long id, String callerUsername) {
     AppUser caller = userRepository.findByUsername(callerUsername)
             .orElseThrow(() -> new RuntimeException("User not found"));
-
     Account account = accountRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Account not found"));
-
     if (!account.getOwner().getId().equals(caller.getId())) {
         throw new org.springframework.security.access.AccessDeniedException(
                 "You don't own this account");
@@ -47,9 +49,10 @@ public Account getAccountById(Long id, String callerUsername) {
 }
 ```
 
-**Also update the controller** to pass `auth.getName()`:
+**File:** `src/main/java/com/example/wallet/controller/AccountController.java`
+
 ```java
-// AccountController.java
+// The fix — add Authentication parameter and pass it through:
 @GetMapping("/{id}")
 public ResponseEntity<Account> getAccountById(
         @PathVariable Long id, Authentication auth) {
@@ -57,7 +60,86 @@ public ResponseEntity<Account> getAccountById(
 }
 ```
 
-**Apply the same pattern** to `UserService.getUserById()` and `TransactionService`.
+---
+
+### 1b — UserService + UserController
+
+**File:** `src/main/java/com/example/wallet/service/UserService.java`
+
+```java
+// The bug:
+public UserResponse getUserById(Long id) {
+    AppUser user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    return new UserResponse(user.getId(), user.getUsername(),
+            user.getEmail(), user.getPassword(), user.getRole());
+}
+
+// The fix:
+public UserResponse getUserById(Long id, String callerUsername) {
+    AppUser caller = userRepository.findByUsername(callerUsername)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    AppUser user = userRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    if (!user.getId().equals(caller.getId())) {
+        throw new org.springframework.security.access.AccessDeniedException(
+                "You don't own this profile");
+    }
+    return new UserResponse(user.getId(), user.getUsername(),
+            user.getEmail(), user.getPassword(), user.getRole());
+}
+```
+
+**File:** `src/main/java/com/example/wallet/controller/UserController.java`
+
+```java
+// The fix:
+@GetMapping("/{id}")
+public ResponseEntity<UserResponse> getUserById(
+        @PathVariable Long id, Authentication auth) {
+    return ResponseEntity.ok(userService.getUserById(id, auth.getName()));
+}
+```
+
+---
+
+### 1c — TransactionService + TransactionController
+
+**File:** `src/main/java/com/example/wallet/service/TransactionService.java`
+
+```java
+// The bug:
+public List<Transaction> getTransactionsForAccount(Long accountId) {
+    return transactionRepository.findByAccountId(accountId);
+}
+
+// The fix:
+public List<Transaction> getTransactionsForAccount(Long accountId, String callerUsername) {
+    AppUser caller = userRepository.findByUsername(callerUsername)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+    Account account = accountRepository.findById(accountId)
+            .orElseThrow(() -> new RuntimeException("Account not found"));
+    if (!account.getOwner().getId().equals(caller.getId())) {
+        throw new org.springframework.security.access.AccessDeniedException(
+                "You don't own this account");
+    }
+    return transactionRepository.findByAccountId(accountId);
+}
+```
+
+**File:** `src/main/java/com/example/wallet/controller/TransactionController.java`
+
+```java
+// The fix:
+@GetMapping("/account/{accountId}")
+public ResponseEntity<List<Transaction>> getTransactions(
+        @PathVariable Long accountId, Authentication auth) {
+    return ResponseEntity.ok(
+            transactionService.getTransactionsForAccount(accountId, auth.getName()));
+}
+```
+
+---
 
 **Verify with tests:**
 ```bash
@@ -133,7 +215,7 @@ public class UserResponse {
 
 ---
 
-## Fix 4 — Fix CORS to Allowlist Only (10 min)
+## Fix 4 — Fix CORS to Allowlist Only ⏱ if time (10 min)
 
 **File:** `api/src/main/java/com/example/wallet/config/SecurityConfig.java`
 
@@ -160,9 +242,9 @@ config.setAllowCredentials(true);
 
 ---
 
-## Fix 5 — Webhook HMAC Verification (20 min)
+## Fix 5 — Webhook HMAC Verification ⏱ if time (20 min)
 
-**File:** `api/src/main/java/com/example/wallet/controller/WebhookController.java`
+**File:** `src/main/java/com/example/wallet/controller/WebhookController.java`
 
 ### The bug — signature header is ignored:
 ```java
@@ -174,33 +256,71 @@ public ResponseEntity<?> receivePaymentWebhook(
 }
 ```
 
-### The fix — add a verification method and call it:
+### The fix — full controller replacement:
 ```java
-@PostMapping("/payment")
-public ResponseEntity<?> receivePaymentWebhook(
-        @RequestHeader(value = "X-Signature-256") String signature,
-        @RequestBody String rawBody) {
+import com.example.wallet.dto.WebhookPayload;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-    verifySignature(signature, rawBody);
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.Map;
 
-    WebhookPayload payload = parsePayload(rawBody);
-    // process payload...
-    return ResponseEntity.ok(Map.of("status", "accepted"));
-}
+@RestController
+@RequestMapping("/api/webhook")
+@RequiredArgsConstructor
+public class WebhookController {
 
-private void verifySignature(String received, String body) {
-    try {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        mac.init(new SecretKeySpec(webhookSecret.getBytes(), "HmacSHA256"));
-        String expected = "sha256=" + HexFormat.of()
-                .formatHex(mac.doFinal(body.getBytes()));
+    @Value("${app.webhook.secret}")
+    private String webhookSecret;
 
-        // ⚠️ Critical: use constant-time comparison to prevent timing attacks
-        if (!MessageDigest.isEqual(expected.getBytes(), received.getBytes())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid signature");
+    private final ObjectMapper objectMapper;
+
+    @PostMapping("/payment")
+    public ResponseEntity<Map<String, String>> receivePaymentWebhook(
+            @RequestHeader(value = "X-Signature-256") String signature,
+            @RequestBody String rawBody) {
+
+        verifySignature(signature, rawBody);
+
+        WebhookPayload payload = parsePayload(rawBody);
+        System.out.println("Verified webhook event: " + payload.getEvent()
+                + " for account " + payload.getAccountId());
+
+        return ResponseEntity.ok(Map.of("status", "accepted", "event", payload.getEvent()));
+    }
+
+    private void verifySignature(String received, String body) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(webhookSecret.getBytes(), "HmacSHA256"));
+            String expected = "sha256=" + HexFormat.of()
+                    .formatHex(mac.doFinal(body.getBytes()));
+
+            // ⚠️ Critical: constant-time comparison prevents timing attacks
+            if (!MessageDigest.isEqual(expected.getBytes(), received.getBytes())) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid signature");
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException("HMAC verification failed", e);
         }
-    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-        throw new RuntimeException("HMAC verification failed", e);
+    }
+
+    private WebhookPayload parsePayload(String rawBody) {
+        try {
+            return objectMapper.readValue(rawBody, WebhookPayload.class);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid payload");
+        }
     }
 }
 ```

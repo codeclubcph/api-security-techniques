@@ -45,7 +45,7 @@ Mention the Medium articles briefly — it builds credibility and they can read 
 
 | Time        | Block                                                |
 |-------------|------------------------------------------------------|
-| 0:00 – 0:15 | Intrudction                                          |
+| 0:00 – 0:15 | Introduction                                         |
 | 0:15 – 0:45 | 🧠 Theory Block 1: Why Most APIs Are Fake Secure     |
 | 0:45 – 1:15 | 🛠 Exercise 1: Breaking Things                       |
 | 1:15 – 1:30 | ☕ Break                                              |
@@ -321,7 +321,7 @@ This sets up the exercise well: "You're about to break an API that's missing all
 # 🛠 Exercise 1
 ## Breaking Things
 
-**⏱ 60 minutes**
+**⏱ 30 minutes**
 Open `docs/exercise-1-breaking-things.md`
 
 <!--
@@ -344,6 +344,26 @@ See you back here in 15.
 <!--
 Hard stop. Don't let it run over — people need to decompress after the exercise.
 Use this quote as your closing line before people stand up. It reframes what they just did.
+-->
+
+---
+
+## 🎯 Debrief — What did we break?
+
+| Vulnerability                                | Root cause |
+|----------------------------------------------|-----------|
+| IDOR – User profiles, Accounts, Transactions | No ownership check in service layer |
+| Sensitive data leak                          | Password field in response DTO |
+| Brute-force login                            | No rate limiting on auth endpoint |
+| Fake webhook                                 | No HMAC signature verification |
+| Exposed actuator                             | `permitAll()` on `/actuator/**` |
+| Weak JWT secret                              | 9-char hardcoded secret, crackable offline |
+| H2 console exposed                           | `permitAll()` on `/h2-console/**` — full DB via browser |
+
+<!--
+Walk through the table row by row — keep it fast, one sentence per row.
+The goal is pattern recognition: almost every vulnerability has the same root cause (missing check, missing validation, missing verification).
+Land on: "None of these required a sophisticated attack. Just knowing where to look."
 -->
 
 ---
@@ -529,7 +549,7 @@ Set up the exercise: "You just broke this API. Now you're the engineer who got p
 # 🛠 Exercise 2
 ## Fixing Production Issues
 
-**⏱ 60 minutes** — You're now the engineer after the incident.
+**⏱ 90 minutes** — You're now the engineer after the incident.
 Open `docs/exercise-2-fixing-production.md`
 
 <!--
@@ -537,6 +557,26 @@ Remind participants: every fix requires a rebuild — `docker compose up --build
 Fix 1 (IDOR ownership check) takes longest — if someone is stuck after 10 min, walk through it together.
 Fix 5 (HMAC webhook) has the most "aha" moment around constant-time comparison — worth pausing for discussion.
 Pair slower participants with faster ones for the last 20 min.
+-->
+
+---
+
+## 🎯 Debrief — What we fixed
+
+| Fix | Technique | Impact |
+|-----|-----------|--------|
+| Ownership checks | Authorization in service layer | Stops IDOR attacks |
+| Remove password from DTO | Sensitive data control | Stops credential leakage |
+| Security headers | HTTP response hardening | Stops clickjacking, MIME sniffing |
+| CORS allowlist | Explicit origin control | Stops cross-site request forgery |
+| Webhook HMAC | Constant-time verification | Stops forged payment events |
+
+**All 5 fixes are production-ready patterns used in real systems.**
+Not theoretical. Not "best practices." Things that prevent real incidents.
+
+<!--
+Same format as the Exercise 1 debrief — walk the table quickly.
+Then pause on the last line. Let it land before moving to closing.
 -->
 
 ---
