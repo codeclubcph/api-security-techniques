@@ -28,14 +28,16 @@ Apply the same pattern to **3 services and 3 controllers**.
 
 **File:** `src/main/java/com/example/wallet/service/AccountService.java`
 
+**Before:**
 ```java
-// The bug:
 public Account getAccountById(Long id) {
     return accountRepository.findById(id)   // ← no ownership check
         .orElseThrow(() -> new RuntimeException("Account not found"));
 }
+```
 
-// The fix:
+**After:**
+```java
 public Account getAccountById(Long id, String callerUsername) {
     AppUser caller = userRepository.findByUsername(callerUsername)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -51,8 +53,8 @@ public Account getAccountById(Long id, String callerUsername) {
 
 **File:** `src/main/java/com/example/wallet/controller/AccountController.java`
 
+**After** — add `Authentication auth` and pass it through:
 ```java
-// The fix — add Authentication parameter and pass it through:
 @GetMapping("/{id}")
 public ResponseEntity<Account> getAccountById(
         @PathVariable Long id, Authentication auth) {
@@ -66,16 +68,18 @@ public ResponseEntity<Account> getAccountById(
 
 **File:** `src/main/java/com/example/wallet/service/UserService.java`
 
+**Before:**
 ```java
-// The bug:
 public UserResponse getUserById(Long id) {
     AppUser user = userRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("User not found"));
     return new UserResponse(user.getId(), user.getUsername(),
             user.getEmail(), user.getPassword(), user.getRole());
 }
+```
 
-// The fix:
+**After:**
+```java
 public UserResponse getUserById(Long id, String callerUsername) {
     AppUser caller = userRepository.findByUsername(callerUsername)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -92,8 +96,8 @@ public UserResponse getUserById(Long id, String callerUsername) {
 
 **File:** `src/main/java/com/example/wallet/controller/UserController.java`
 
+**After** — add `Authentication auth` and pass it through:
 ```java
-// The fix:
 @GetMapping("/{id}")
 public ResponseEntity<UserResponse> getUserById(
         @PathVariable Long id, Authentication auth) {
@@ -107,13 +111,15 @@ public ResponseEntity<UserResponse> getUserById(
 
 **File:** `src/main/java/com/example/wallet/service/TransactionService.java`
 
+**Before:**
 ```java
-// The bug:
 public List<Transaction> getTransactionsForAccount(Long accountId) {
     return transactionRepository.findByAccountId(accountId);
 }
+```
 
-// The fix:
+**After:**
+```java
 public List<Transaction> getTransactionsForAccount(Long accountId, String callerUsername) {
     AppUser caller = userRepository.findByUsername(callerUsername)
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -129,8 +135,8 @@ public List<Transaction> getTransactionsForAccount(Long accountId, String caller
 
 **File:** `src/main/java/com/example/wallet/controller/TransactionController.java`
 
+**After** — add `Authentication auth` and pass it through:
 ```java
-// The fix:
 @GetMapping("/account/{accountId}")
 public ResponseEntity<List<Transaction>> getTransactions(
         @PathVariable Long accountId, Authentication auth) {
@@ -186,14 +192,22 @@ public class UserResponse {
 
 ## Fix 3 — Add Security Headers (10 min)
 
-**File:** `api/src/main/java/com/example/wallet/config/SecurityConfig.java`
+**File:** `src/main/java/com/example/wallet/config/SecurityConfig.java`
 
-### The bug:
+**Step 1 — Add these two imports** at the top of the file:
 ```java
-.headers(headers -> headers.disable())  // ← all headers stripped
+import org.springframework.security.config.Customizer;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 ```
 
-### The fix:
+**Step 2 — Replace this line** in the `filterChain` method:
+
+**Before:**
+```java
+.headers(headers -> headers.disable())
+```
+
+**After:**
 ```java
 .headers(headers -> headers
     .httpStrictTransportSecurity(hsts -> hsts
