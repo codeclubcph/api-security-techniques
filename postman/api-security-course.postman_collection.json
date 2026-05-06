@@ -1,0 +1,218 @@
+{
+  "info": {
+    "name": "API Security Techniques – Wallet API",
+    "description": "Course collection covering Exercise 1 (breaking the vulnerable API) and Exercise 2 (fixing production issues).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "alice_token", "value": "" },
+    { "key": "bob_token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0 – Health Check",
+      "item": [
+        {
+          "name": "GET /actuator/health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/actuator/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1 – Authentication",
+      "item": [
+        {
+          "name": "Login as Alice",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "pm.collectionVariables.set('alice_token', json.token);",
+            "pm.test('Login successful', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"password123\"\n}" }
+          }
+        },
+        {
+          "name": "Login as Bob",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "var json = pm.response.json();",
+            "pm.collectionVariables.set('bob_token', json.token);",
+            "pm.test('Login successful', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"bob\",\n  \"password\": \"hunter2\"\n}" }
+          }
+        },
+        {
+          "name": "🔥 Brute-force Login (wrong passwords)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"wrongpassword\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2 – Exercise 1: Breaking Things",
+      "item": [
+        {
+          "name": "My Profile (Alice – OK)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/users/me"
+          }
+        },
+        {
+          "name": "🔥 IDOR – Alice reads Bob's profile (id=2)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/users/2"
+          }
+        },
+        {
+          "name": "🔥 IDOR – Alice reads Admin profile (id=4)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/users/4"
+          }
+        },
+        {
+          "name": "My Accounts (Alice – OK)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/accounts"
+          }
+        },
+        {
+          "name": "🔥 IDOR – Alice reads Bob's account (id=2)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/accounts/2"
+          }
+        },
+        {
+          "name": "🔥 IDOR – Alice reads Admin account (id=4)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/accounts/4"
+          }
+        },
+        {
+          "name": "Alice's Transactions (account 1 – OK)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/transactions/account/1"
+          }
+        },
+        {
+          "name": "🔥 IDOR – Alice reads Bob's transactions (account 2)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/transactions/account/2"
+          }
+        },
+        {
+          "name": "🔥 IDOR – Alice reads Admin transactions (account 4)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/transactions/account/4"
+          }
+        },
+        {
+          "name": "🔥 Sensitive Data Leak – Password visible in /me response",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/users/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3 – Exercise 2: Fixing Production Issues",
+      "item": [
+        {
+          "name": "🔥 Fake Webhook (no signature)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/webhook/payment",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"payment.completed\",\n  \"accountId\": \"4\",\n  \"amount\": \"99999.00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Webhook with Valid HMAC Signature (after fix)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-Signature-256", "value": "sha256=REPLACE_WITH_COMPUTED_HMAC" }
+            ],
+            "url": "{{base_url}}/api/webhook/payment",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"payment.completed\",\n  \"accountId\": \"1\",\n  \"amount\": \"500.00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Check Security Headers (after fix)",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('HSTS header present', () => pm.response.to.have.header('Strict-Transport-Security'));",
+            "pm.test('X-Frame-Options present', () => pm.response.to.have.header('X-Frame-Options'));",
+            "pm.test('X-Content-Type-Options present', () => pm.response.to.have.header('X-Content-Type-Options'));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
+            "url": "{{base_url}}/api/accounts"
+          }
+        },
+        {
+          "name": "CORS Preflight from evil-site.com (should be blocked after fix)",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              { "key": "Origin", "value": "https://evil-site.com" },
+              { "key": "Access-Control-Request-Method", "value": "GET" }
+            ],
+            "url": "{{base_url}}/api/accounts"
+          }
+        },
+        {
+          "name": "🔥 Rate Limit Test – Login 10x fast (should be blocked after fix)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/api/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"alice\",\n  \"password\": \"wrong\"\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

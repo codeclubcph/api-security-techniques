@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: vulnerable-wallet-api
+  datasource:
+    url: jdbc:h2:mem:walletdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    defer-datasource-initialization: true  # Hibernate creates tables first, then data.sql runs
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8080
+
+#️  VULNERABILITY: JWT secret is weak and hardcoded
+app:
+  jwt:
+    secret: secret123
+    expiration: 86400000   # 24h — intentionally too long
+  webhook:
+    secret: webhook-secret-key
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
