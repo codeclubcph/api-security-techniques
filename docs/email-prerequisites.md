@@ -4,7 +4,7 @@
 
 Hi everybody,
 
-I'm looking forward to seeing you at the **API Security Techniques** workshop on 7.05.2026 from 5pm.
+I'm looking forward to seeing you at the **API Security Techniques** workshop on 7th May 2026 from 17:00-21:00.
 
 Before the session starts, please spend a moment on getting everything installed. The exercises depend on a running API and Postman — if you arrive without them set up, you might miss the first exercise.
 
@@ -31,7 +31,7 @@ We'll use Postman to interact with the API during exercises.
 ### 3. Pull the API image ahead of time (saves time during the session)
 ```bash
 # Clone the course repo
-git clone https://github.com/your-org/api-security-techniques.git
+git clone https://github.com/codeclubcph/api-security-techniques.git
 cd api-security-techniques
 
 # Build & start the API

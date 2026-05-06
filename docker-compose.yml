@@ -1,9 +1,6 @@
-version: '3.9'
-
 services:
   wallet-api:
     build:
-      context: api
       dockerfile: Dockerfile
     image: vulnerable-wallet-api:latest
     container_name: vulnerable-wallet-api
