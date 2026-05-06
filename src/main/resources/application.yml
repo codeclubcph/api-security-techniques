@@ -16,6 +16,8 @@ spring:
     console:
       enabled: true
       path: /h2-console
+      settings:
+        web-allow-others: true  # ⚠️ VULNERABILITY: allows remote access to DB console
   sql:
     init:
       mode: always

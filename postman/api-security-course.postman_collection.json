@@ -146,6 +146,28 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{alice_token}}" }],
             "url": "{{base_url}}/api/users/me"
           }
+        },
+
+        {
+          "name": "🔥 Exposed Actuator – Metrics (no auth needed)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/actuator/metrics"
+          }
+        },
+        {
+          "name": "🔥 Exposed Actuator – JVM Memory (no auth needed)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/actuator/metrics/jvm.memory.used"
+          }
+        },
+        {
+          "name": "🔥 Exposed Actuator – Info (no auth needed)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/actuator/info"
+          }
         }
       ]
     },
