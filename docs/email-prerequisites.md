@@ -65,14 +65,15 @@ If that works — you're ready! ✅
 
 The workshop is structured as two theory blocks and two hands-on exercises:
 
-| Time | Block |
-|------|-------|
-| 0:00 – 0:45 | Theory: Why most APIs are fake secure |
-| 0:45 – 1:45 | **Exercise 1**: Breaking a vulnerable API |
-| 1:45 – 2:00 | ☕ Break |
-| 2:00 – 2:45 | Theory: What actually breaks in production |
-| 2:45 – 3:45 | **Exercise 2**: Fixing production issues |
-| 3:45 – 4:00 | Closing: The 2 layers of API security |
+| Time        | Block                                      |
+|-------------|--------------------------------------------|
+| 0:00 – 0:15 | Introduction                               |
+| 0:15 – 0:45 | Theory: Why most APIs are fake secure      |
+| 0:45 – 1:15 | **Exercise 1**: Breaking a vulnerable API  |
+| 1:15 – 1:30 | ☕ Break                                    |
+| 1:30 – 2:15 | Theory: What actually breaks in production |
+| 2:15 – 3:45 | **Exercise 2**: Fixing production issues   |
+| 3:45 – 4:00 | Closing: The 2 layers of API security      |
 
 ---
 

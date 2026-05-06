@@ -43,14 +43,15 @@ Mention the Medium articles briefly — it builds credibility and they can read 
 
 ## Agenda — 4 hours
 
-| Time | Block |
-|------|-------|
-| 0:00 – 0:45 | 🧠 Theory Block 1: Why Most APIs Are Fake Secure |
-| 0:45 – 1:45 | 🛠 Exercise 1: Breaking Things |
-| 1:45 – 2:00 | ☕ Break |
-| 2:00 – 2:45 | 🧠 Theory Block 2: What Actually Breaks in Production |
-| 2:45 – 3:45 | 🛠 Exercise 2: Fixing Production Issues |
-| 3:45 – 4:00 | 🎯 The 2 Layers of API Security |
+| Time        | Block                                                |
+|-------------|------------------------------------------------------|
+| 0:00 – 0:15 | Intrudction                                          |
+| 0:15 – 0:45 | 🧠 Theory Block 1: Why Most APIs Are Fake Secure     |
+| 0:45 – 1:15 | 🛠 Exercise 1: Breaking Things                       |
+| 1:15 – 1:30 | ☕ Break                                              |
+| 1:30 – 2:15 | 🧠 Theory Block 2: What Actually Breaks in Production |
+| 2:15 – 3:45 | 🛠 Exercise 2: Fixing Production Issues              |
+| 3:45 – 4:00 | 🎯 The 2 Layers of API Security                      |
 
 <!--
 Walk through the agenda briefly. Emphasise: the exercises are the core — theory gives you vocabulary for what you're about to do hands-on.

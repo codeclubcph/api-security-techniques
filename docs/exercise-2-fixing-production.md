@@ -1,7 +1,6 @@
 # 🛠 Exercise 2 — Fixing Production Issues
-### ⏱ 60 minutes | You're the engineer after the incident
 
-> **Goal:** Apply 4 concrete fixes to the vulnerable API.
+> **Goal:** Apply 5 concrete fixes to the vulnerable API.
 > Each fix maps directly to a technique from Block 2 theory.
 > Open the API source in your editor — you'll be editing real Java files.
 
@@ -9,9 +8,13 @@
 
 ## Setup
 
-- [ ] API is **stopped**: `docker compose down`
-- [ ] Open the `api/src/` folder in your IDE or editor
-- [ ] After each fix, rebuild: `docker compose up --build`
+- [ ] Open the `src/` folder in your IDE or editor
+- [ ] Run the test suite — you should see **7 tests failing**:
+  ```bash
+  ./gradlew test
+  ```
+- [ ] Your goal: make all tests green. The tests don't need Docker — they run against an in-memory database directly.
+- [ ] Use Postman + `docker compose up --build` to manually verify after each fix if you want to see it live
 
 ---
 
@@ -56,7 +59,13 @@ public ResponseEntity<Account> getAccountById(
 
 **Apply the same pattern** to `UserService.getUserById()` and `TransactionService`.
 
-**Verify:** Re-run **"🔥 IDOR – Alice reads Bob's account (id=2)"** → should now return `403 Forbidden`.
+**Verify with tests:**
+```bash
+./gradlew test --tests "*.fix1_*"
+```
+All 3 `fix1_` tests should go green ✅
+
+**Verify with Postman:** Re-run **"🔥 IDOR – Alice reads Bob's account (id=2)"** → `403 Forbidden`.
 
 ---
 
@@ -85,7 +94,11 @@ public class UserResponse {
 }
 ```
 
-**Verify:** Run **"My Profile (Alice – OK)"** → `password` field is gone from the response.
+**Verify with tests:**
+```bash
+./gradlew test --tests "*.fix2_*"
+```
+**Verify with Postman:** Run **"My Profile (Alice – OK)"** → `password` field is gone from the response.
 
 ---
 
@@ -112,7 +125,11 @@ public class UserResponse {
 )
 ```
 
-**Verify:** Run **"Check Security Headers (after fix)"** in Postman → all 3 tests pass ✅
+**Verify with tests:**
+```bash
+./gradlew test --tests "*.fix3_*"
+```
+**Verify with Postman:** Run **"Check Security Headers (after fix)"** → all 3 Postman tests pass ✅
 
 ---
 
@@ -135,7 +152,11 @@ config.setAllowedOrigins(List.of(
 config.setAllowCredentials(true);
 ```
 
-**Verify:** Run **"CORS Preflight from evil-site.com"** → should return `403` or no CORS headers.
+**Verify with tests:**
+```bash
+./gradlew test --tests "*.fix4_*"
+```
+**Verify with Postman:** Run **"CORS Preflight from evil-site.com"** → no `Access-Control-Allow-Origin` header.
 
 ---
 
@@ -184,7 +205,13 @@ private void verifySignature(String received, String body) {
 }
 ```
 
-**Verify:** Run **"🔥 Fake Webhook (no signature)"** → should now return `400` / `401`.
+**Verify with tests:**
+```bash
+./gradlew test --tests "*.fix5_*"
+```
+Both `fix5_` tests should go green: one confirms unsigned requests are rejected, one confirms a correctly signed request is accepted.
+
+**Verify with Postman:** Run **"🔥 Fake Webhook (no signature)"** → `401 Unauthorized`.
 
 ---
 
