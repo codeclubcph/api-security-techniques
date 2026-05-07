@@ -22,10 +22,15 @@ public class AccountService {
         return accountRepository.findByOwnerId(user.getId());
     }
 
-    public Account getAccountById(Long id) {
-        // ⚠️ VULNERABILITY: No ownership check — any authenticated user can access
-        //    any account by guessing the ID (IDOR — Insecure Direct Object Reference)
-        return accountRepository.findById(id)
+    public Account getAccountById(Long id, String callerUsername) {
+        AppUser caller = userRepository.findByUsername(callerUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Account not found"));
+        if (!account.getOwner().getId().equals(caller.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You don't own this account");
+        }
+        return account;
     }
 }

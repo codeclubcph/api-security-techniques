@@ -4,13 +4,15 @@ import com.example.wallet.security.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
@@ -34,13 +36,22 @@ public class SecurityConfig {
             // ⚠️ VULNERABILITY: CORS allows all origins with credentials
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // ⚠️ VULNERABILITY: No security headers configured (no HSTS, CSP, X-Frame-Options)
-            .headers(headers -> headers.disable())
+            .headers(headers -> headers
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000))
+                .frameOptions(frame -> frame.deny())
+                .contentTypeOptions(Customizer.withDefaults())
+                .referrerPolicy(referrer -> referrer
+                    .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy
+                            .STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/api/webhook/**").permitAll()
-                .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/actuator/**").authenticated()
                 .anyRequest().authenticated()
             )
             // Return 401 (not 403) for unauthenticated requests — Spring Security 6 default is 403
@@ -52,17 +63,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    // ⚠️ VULNERABILITY: NoOpPasswordEncoder — passwords stored and compared in plain text
-    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // ⚠️ VULNERABILITY: Wildcard origin with credentials allowed
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(List.of(
+            "http://localhost:3000",
+            "https://yourapp.com"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

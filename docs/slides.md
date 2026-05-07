@@ -19,39 +19,20 @@ Today you'll break a real API, then fix it. This isn't a slides-only session.
 
 ---
 
-## About Me
-
-**Magdalena Furman** — Senior Software Engineer
-
-- Building production backend systems for 10+ years
-- Wrote the articles this course is based on — links at the end
-- Passionate about security that's **practical**, not theoretical
-
-**What this course is NOT:**
-- A compliance checklist
-- A "never do X" scare session
-
-**What it IS:**
-- Patterns that stop real attacks in production systems
-
-<!--
-Keep this short — 2 minutes max. People are here for the content, not the bio.
-Mention the Medium articles briefly — it builds credibility and they can read deeper after.
--->
-
----
-
 ## Agenda — 4 hours
 
-| Time        | Block                                                |
-|-------------|------------------------------------------------------|
-| 0:00 – 0:15 | Introduction                                         |
-| 0:15 – 0:45 | 🧠 Theory Block 1: Why Most APIs Are Fake Secure     |
-| 0:45 – 1:15 | 🛠 Exercise 1: Breaking Things                       |
-| 1:15 – 1:30 | ☕ Break                                              |
-| 1:30 – 2:15 | 🧠 Theory Block 2: What Actually Breaks in Production |
-| 2:15 – 3:45 | 🛠 Exercise 2: Fixing Production Issues              |
-| 3:45 – 4:00 | 🎯 The 2 Layers of API Security                      |
+| Time        | Block                                                 |
+|-------------|-------------------------------------------------------|
+| 0:00 – 0:10 | ✨ Introduction                                        |
+| 0:10 – 0:40 | 🧠 Theory Block 1: Why Most APIs Are Fake Secure      |
+| 0:40 – 0:45 | ☕ Break (5 min)                                       |
+| 0:45 – 1:15 | 🛠 Exercise 1: Breaking Things                        |
+| 1:15 – 1:20 | ☕ Break (5 min)                                       |
+| 1:20 – 2:00 | 🧠 Theory Block 2: What Actually Breaks in Production |
+| 2:00 – 2:20 | ☕ Break (20 min)                                      |
+| 2:20 – 3:45 | 🛠 Exercise 2: Fixing Production Issues               |
+| 3:45 – 3:50 | ☕ Break (5 min)                                       |
+| 3:50 – 4:00 | 🎯 Key Takeaways                                      |
 
 <!--
 Walk through the agenda briefly. Emphasise: the exercises are the core — theory gives you vocabulary for what you're about to do hands-on.
@@ -314,6 +295,18 @@ This sets up the exercise well: "You're about to break an API that's missing all
 
 ---
 
+# ☕ Break — 5 minutes
+
+> "You now have the vocabulary. Time to see it in the wild."
+
+See you back in 5.
+
+<!--
+Short break — keep it tight. People are usually energised going into the first exercise.
+-->
+
+---
+
 <!-- ═══════════════════════════════════════════════════
      EXERCISE 1
 ══════════════════════════════════════════════════════ -->
@@ -334,16 +327,16 @@ Walk the room. Most people finish challenges 1–3 quickly. The brute-force and 
 
 ---
 
-# ☕ Break — 15 minutes
+# ☕ Break — 5 minutes
 
 > "Everything you just broke is because one of
 >  those 3 fundamentals was missing."
 
-See you back here in 15.
+See you back in 5.
 
 <!--
-Hard stop. Don't let it run over — people need to decompress after the exercise.
-Use this quote as your closing line before people stand up. It reframes what they just did.
+Hard stop. Use this quote as your closing line before people stand up — it reframes what they just did.
+Short break intentional: energy is high after the exercise, carry it into the debrief.
 -->
 
 ---
@@ -364,6 +357,19 @@ Use this quote as your closing line before people stand up. It reframes what the
 Walk through the table row by row — keep it fast, one sentence per row.
 The goal is pattern recognition: almost every vulnerability has the same root cause (missing check, missing validation, missing verification).
 Land on: "None of these required a sophisticated attack. Just knowing where to look."
+-->
+
+---
+
+# ☕ Break — 20 minutes
+
+> "You've broken it. After the break — you fix it."
+
+Back at [time + 20].
+
+<!--
+Longest break of the day — intentional. People need to recharge before the 85-minute exercise.
+Use this time to reset the room: check that everyone has the repo open and can run the tests.
 -->
 
 ---
@@ -549,7 +555,7 @@ Set up the exercise: "You just broke this API. Now you're the engineer who got p
 # 🛠 Exercise 2
 ## Fixing Production Issues
 
-**⏱ 90 minutes** — You're now the engineer after the incident.
+**⏱ 85 minutes** — You're now the engineer after the incident.
 Open `docs/exercise-2-fixing-production.md`
 
 <!--
@@ -581,11 +587,24 @@ Then pause on the last line. Let it land before moving to closing.
 
 ---
 
+# ☕ Break — 5 minutes
+
+> "Last one. Then we wrap up."
+
+Back in 5.
+
+<!--
+Final short break before key takeaways. Lets people decompress after the long exercise.
+Use this time to pull up the closing slides and prepare for questions.
+-->
+
+---
+
 <!-- ═══════════════════════════════════════════════════
      CLOSING
 ══════════════════════════════════════════════════════ -->
 
-# 🎯 The 2 Layers of API Security
+# 🎯 Key Takeaways
 
 ---
 

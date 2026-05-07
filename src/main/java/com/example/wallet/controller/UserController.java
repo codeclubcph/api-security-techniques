@@ -26,7 +26,7 @@ public class UserController {
      *    including their plain-text password. No ownership or admin check.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(userService.getUserById(id, auth.getName()));
     }
 }

@@ -15,19 +15,18 @@ public class UserService {
     public UserResponse getProfile(String username) {
         AppUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // ⚠️ VULNERABILITY: Password field returned in the response DTO
-        return new UserResponse(user.getId(), user.getUsername(),
-                user.getEmail(), user.getPassword(), user.getRole());
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
     }
 
-    public UserResponse getUserById(Long id) {
+    public UserResponse getUserById(Long id, String callerUsername) {
+        AppUser caller = userRepository.findByUsername(callerUsername)
+                .orElseThrow(() -> new RuntimeException("User not found"));
         AppUser user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // ⚠️ VULNERABILITY: Any authenticated user can fetch any other user's profile
-        //    including their plain-text password and role — no ownership check
-        return new UserResponse(user.getId(), user.getUsername(),
-                user.getEmail(), user.getPassword(), user.getRole());
+        if (!user.getId().equals(caller.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "You don't own this profile");
+        }
+        return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRole());
     }
 }

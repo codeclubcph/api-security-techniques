@@ -24,11 +24,9 @@ public class AccountController {
 
     /**
      * GET /api/accounts/{id}
-     * ⚠️ VULNERABILITY: Returns any account regardless of ownership
-     *    Classic IDOR — just increment the ID to see other users' balances
      */
     @GetMapping("/{id}")
-    public ResponseEntity<Account> getAccountById(@PathVariable Long id) {
-        return ResponseEntity.ok(accountService.getAccountById(id));
+    public ResponseEntity<Account> getAccountById(@PathVariable Long id, Authentication auth) {
+        return ResponseEntity.ok(accountService.getAccountById(id, auth.getName()));
     }
 }

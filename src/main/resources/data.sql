@@ -1,10 +1,10 @@
 -- Seed users
--- Passwords stored as plain text ⚠️ VULNERABILITY
+-- Passwords hashed with BCrypt (cost 12) ✅ FIX: no plain-text passwords in DB
 INSERT INTO app_user (id, username, email, password, role) VALUES
-  (1, 'alice',   'alice@example.com',   'password123',  'USER'),
-  (2, 'bob',     'bob@example.com',     'hunter2',      'USER'),
-  (3, 'charlie', 'charlie@example.com', 'ch@rlie!pass', 'USER'),
-  (4, 'admin',   'admin@example.com',   'admin123',     'ADMIN');
+  (1, 'alice',   'alice@example.com',   '$2a$12$WBL.sxiZJtgueFyJjFgOyOx3M/oEjrzUbUxfIULpN2L7AXQkHo45.', 'USER'),
+  (2, 'bob',     'bob@example.com',     '$2a$12$.3CVy1cVlU/Ejowpa6l.ROBd3n/HPcZIuxrMvXm4sHPz/jvQzFFmC', 'USER'),
+  (3, 'charlie', 'charlie@example.com', '$2a$12$PDk4YPgleNlMnIxH9TNJI.Oz/epJq1Dmsv7vl8jVA5Sjzw2zcSAIu', 'USER'),
+  (4, 'admin',   'admin@example.com',   '$2a$12$0a4w70HkyT3P2UOnqwJ8I.RyUCCbZSrVsCfY6.UdbJFe9HFnxpbWu', 'ADMIN');
 
 -- Seed accounts
 INSERT INTO account (id, owner_id, account_number, balance) VALUES

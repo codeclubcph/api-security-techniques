@@ -69,6 +69,24 @@ class SecurityFixesTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("❌ Fix 1 – Alice cannot search Bob's transactions (expects 403)")
+    void fix1_aliceCannotSearchBobsTransactions() throws Exception {
+        mvc.perform(get("/api/transactions/account/2/search")
+                .param("keyword", "coffee")
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("✅ Fix 1 – Alice can search her own transactions")
+    void fix1_aliceCanSearchOwnTransactions() throws Exception {
+        mvc.perform(get("/api/transactions/account/1/search")
+                .param("keyword", "coffee")
+                .header("Authorization", "Bearer " + aliceToken))
+                .andExpect(status().isOk());
+    }
+
     // ── Fix 2: Sensitive data — password not in response ─────────────────────
 
     @Test
@@ -80,12 +98,44 @@ class SecurityFixesTest {
                 .andExpect(jsonPath("$.password").doesNotExist());
     }
 
+    // ── Fix 6: BCrypt password hashing ───────────────────────────────────────
+
+    @Test
+    @DisplayName("❌ Fix 6 – Correct credentials must return 200 and a token")
+    void fix6_loginWithCorrectCredentialsReturnsToken() throws Exception {
+        mvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"alice\",\"password\":\"password123\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("❌ Fix 6 – Wrong password must return 401, not 500")
+    void fix6_loginWithWrongPasswordReturns401() throws Exception {
+        mvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"alice\",\"password\":\"wrongpassword\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("❌ Fix 6 – Unknown username must return 401, not 500")
+    void fix6_loginWithUnknownUserReturns401() throws Exception {
+        mvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"username\":\"nobody\",\"password\":\"anything\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
     // ── Fix 3: Security headers ───────────────────────────────────────────────
 
     @Test
     @DisplayName("❌ Fix 3 – Response must include HSTS, X-Frame-Options, X-Content-Type-Options")
     void fix3_securityHeadersArePresent() throws Exception {
+        // secure(true) is required: Spring Security only writes HSTS on HTTPS requests
         mvc.perform(get("/api/accounts")
+                .secure(true)
                 .header("Authorization", "Bearer " + aliceToken))
                 .andExpect(status().isOk())
                 .andExpect(header().exists("Strict-Transport-Security"))
@@ -126,6 +176,48 @@ class SecurityFixesTest {
                 .header("X-Signature-256", signature)
                 .content(body))
                 .andExpect(status().isOk());
+    }
+
+    // ── Fix 7: Actuator locked down ───────────────────────────────────────────
+
+    @Test
+    @DisplayName("❌ Fix 7 – /actuator/metrics must require authentication (expects 401)")
+    void fix7_actuatorRequiresAuthentication() throws Exception {
+        mvc.perform(get("/actuator/metrics"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("✅ Fix 7 – /actuator/health remains public")
+    void fix7_actuatorHealthRemainsPublic() throws Exception {
+        mvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk());
+    }
+
+    // ── Fix 8: Rate limiting on login ─────────────────────────────────────────
+
+    @Test
+    @DisplayName("❌ Fix 8 – Login must be rate-limited to 5 attempts per minute (expects 429)")
+    void fix8_loginIsRateLimited() throws Exception {
+        // Use a dedicated IP so this test has its own bucket, isolated from other tests
+        String testIp = "10.99.0.1";
+        String body = "{\"username\":\"alice\",\"password\":\"wrongpassword\"}";
+
+        // First 5 attempts: wrong credentials but not yet rate-limited → 401
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/auth/login")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("X-Forwarded-For", testIp)
+                    .content(body))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        // 6th attempt: bucket exhausted → 429 Too Many Requests
+        mvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Forwarded-For", testIp)
+                .content(body))
+                .andExpect(status().isTooManyRequests());
     }
 
     // ─────────────────────────────────────────────────────────────────────────

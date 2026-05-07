@@ -16,7 +16,7 @@ public class AuthController {
 
     /**
      * POST /api/auth/login
-     * ⚠️ VULNERABILITY: No rate limiting — unlimited brute-force attempts allowed
+     * Rate-limited to 5 attempts per minute per IP by RateLimitFilter.
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
