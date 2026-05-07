@@ -1,3 +1,9 @@
+---
+marp: true
+theme: default
+paginate: true
+---
+
 # 🛠 Exercise 1 — Breaking Things
 
 > **Goal:** Find and exploit the real vulnerabilities in the Wallet API.
@@ -8,7 +14,7 @@
 
 ## Setup checklist
 
-- [ ] API is running: `docker compose up` in the main folder (where docker-compose.yml file exists)
+- [ ] API is running: `docker compose up` in the main folder (where docker-compose.yml lives)
 - [ ] Postman is open with the **"API Security Techniques – Wallet API"** collection imported
 - [ ] You've logged in as Alice (run **"1 – Authentication → Login as Alice"** — token auto-saved)
 
